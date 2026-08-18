@@ -3,9 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { Modalidade } from "@/lib/pricing";
 
 export interface EstadoProduto {
   erro?: string;
+}
+
+function numeroOuNull(valor: FormDataEntryValue | null): number | null {
+  if (valor === null || valor === "") return null;
+  const n = Number(valor);
+  return Number.isFinite(n) ? n : null;
 }
 
 function lerCamposProduto(formData: FormData) {
@@ -15,7 +22,12 @@ function lerCamposProduto(formData: FormData) {
     marca: String(formData.get("marca") ?? "Dipil").trim() || "Dipil",
     custoCompra: Number(formData.get("custo_compra")),
     custoEmbalagem: Number(formData.get("custo_embalagem") ?? 0),
-    pesoGramas: Number(formData.get("peso_gramas") ?? 0),
+    pesoRealG: numeroOuNull(formData.get("peso_real_g")),
+    comprimentoCm: numeroOuNull(formData.get("comprimento_cm")),
+    larguraCm: numeroOuNull(formData.get("largura_cm")),
+    alturaCm: numeroOuNull(formData.get("altura_cm")),
+    modalidadePadrao: (String(formData.get("modalidade_padrao") ?? "agencia") || "agencia") as Modalidade,
+    aceitoNoFull: formData.get("aceito_no_full") === "on",
   };
 }
 
@@ -41,7 +53,12 @@ export async function criarProduto(_estado: EstadoProduto | undefined, formData:
       marca: campos.marca,
       custo_compra: campos.custoCompra,
       custo_embalagem: Number.isFinite(campos.custoEmbalagem) ? campos.custoEmbalagem : 0,
-      peso_gramas: Number.isFinite(campos.pesoGramas) ? Math.round(campos.pesoGramas) : 0,
+      peso_real_g: campos.pesoRealG,
+      comprimento_cm: campos.comprimentoCm,
+      largura_cm: campos.larguraCm,
+      altura_cm: campos.alturaCm,
+      modalidade_padrao: campos.modalidadePadrao,
+      aceito_no_full: campos.aceitoNoFull,
     })
     .select("id")
     .single();
@@ -76,7 +93,12 @@ export async function atualizarProduto(
       marca: campos.marca,
       custo_compra: campos.custoCompra,
       custo_embalagem: Number.isFinite(campos.custoEmbalagem) ? campos.custoEmbalagem : 0,
-      peso_gramas: Number.isFinite(campos.pesoGramas) ? Math.round(campos.pesoGramas) : 0,
+      peso_real_g: campos.pesoRealG,
+      comprimento_cm: campos.comprimentoCm,
+      largura_cm: campos.larguraCm,
+      altura_cm: campos.alturaCm,
+      modalidade_padrao: campos.modalidadePadrao,
+      aceito_no_full: campos.aceitoNoFull,
     })
     .eq("id", id);
 

@@ -4,6 +4,9 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { criarProduto, type EstadoProduto } from "../actions";
 import Campo from "../Campo";
+import CampoSelect from "../CampoSelect";
+import CampoCheckbox from "../CampoCheckbox";
+import { OPCOES_MODALIDADE } from "../opcoesModalidade";
 
 export default function NovoProdutoPage() {
   const [estado, formAction, pendente] = useActionState<EstadoProduto | undefined, FormData>(criarProduto, undefined);
@@ -28,7 +31,33 @@ export default function NovoProdutoPage() {
           <Campo label="Custo de compra (R$)" name="custo_compra" type="number" step="0.01" min="0" required />
           <Campo label="Embalagem (R$)" name="custo_embalagem" type="number" step="0.01" min="0" defaultValue="0" />
         </div>
-        <Campo label="Peso (gramas)" name="peso_gramas" type="number" step="1" min="0" defaultValue="0" />
+
+        <div className="border-t border-slate-100 pt-4">
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">
+            Peso e dimensões — usados pra calcular o custo de envio real
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <Campo label="Peso real (gramas)" name="peso_real_g" type="number" step="1" min="0" />
+            <div />
+            <Campo label="Comprimento (cm)" name="comprimento_cm" type="number" step="0.1" min="0" />
+            <Campo label="Largura (cm)" name="largura_cm" type="number" step="0.1" min="0" />
+            <Campo label="Altura (cm)" name="altura_cm" type="number" step="0.1" min="0" />
+          </div>
+          <p className="mt-1.5 text-xs text-slate-500">
+            Dimensões são da embalagem final, não do produto. Sem peso nem dimensões, a calculadora não tem como
+            estimar o custo de envio.
+          </p>
+        </div>
+
+        <div className="border-t border-slate-100 pt-4 space-y-3">
+          <CampoSelect label="Modalidade de envio padrão" name="modalidade_padrao" defaultValue="agencia" opcoes={OPCOES_MODALIDADE} />
+          <CampoCheckbox
+            label="Aceito no Full"
+            name="aceito_no_full"
+            defaultChecked
+            ajuda="Desmarque para aerossol, inflamável ou produto tóxico — o Full não aceita."
+          />
+        </div>
 
         {estado?.erro && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{estado.erro}</p>}
 

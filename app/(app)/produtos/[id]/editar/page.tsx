@@ -8,7 +8,9 @@ export default async function EditarProdutoPage({ params }: { params: Promise<{ 
   const supabase = await createClient();
   const { data: produto } = await supabase
     .from("produtos")
-    .select("id, nome, sku, marca, custo_compra, custo_embalagem, peso_gramas")
+    .select(
+      "id, nome, sku, marca, custo_compra, custo_embalagem, peso_real_g, comprimento_cm, largura_cm, altura_cm, modalidade_padrao, aceito_no_full",
+    )
     .eq("id", id)
     .single();
 
