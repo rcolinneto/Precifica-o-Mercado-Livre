@@ -11,7 +11,7 @@ export default function ToggleAtivoButton({ id, ativo }: { id: string; ativo: bo
       type="button"
       disabled={pendente}
       onClick={() => startTransition(() => alternarAtivo(id, !ativo))}
-      className="text-sm underline disabled:opacity-50"
+      className="text-sm font-medium text-slate-500 hover:text-slate-900 disabled:opacity-50"
     >
       {ativo ? "Desativar" : "Ativar"}
     </button>

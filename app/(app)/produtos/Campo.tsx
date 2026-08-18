@@ -10,8 +10,8 @@ interface CampoProps {
 
 export default function Campo({ label, name, type = "text", required, defaultValue, step, min }: CampoProps) {
   return (
-    <div className="space-y-1">
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+    <div className="space-y-1.5">
+      <label htmlFor={name} className="block text-sm font-medium text-slate-700">
         {label}
       </label>
       <input
@@ -22,7 +22,7 @@ export default function Campo({ label, name, type = "text", required, defaultVal
         defaultValue={defaultValue}
         step={step}
         min={min}
-        className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
       />
     </div>
   );

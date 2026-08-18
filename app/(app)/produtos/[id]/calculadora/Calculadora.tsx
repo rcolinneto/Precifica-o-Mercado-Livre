@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import {
   calcularParaPreco,
   deveSugerirKit,
@@ -39,21 +40,28 @@ interface Props {
   config: ConfigDb;
 }
 
-const MENSAGENS_ESTADO: Partial<Record<EstadoMargem, { titulo: string; tom: string }>> = {
-  PREJUIZO: { titulo: "Esse preço dá prejuízo.", tom: "bg-red-50 text-red-800 border-red-200" },
+const MENSAGENS_ESTADO: Partial<Record<EstadoMargem, { titulo: string; tom: string; icone: string }>> = {
+  PREJUIZO: { titulo: "Esse preço dá prejuízo.", tom: "bg-red-50 text-red-800 ring-1 ring-inset ring-red-200", icone: "text-red-500" },
   RUIM_ESTRUTURAL: {
     titulo: "Margem ruim mesmo sem o custo fixo — o problema é o custo do produto, não a taxa do ML.",
-    tom: "bg-red-50 text-red-800 border-red-200",
+    tom: "bg-red-50 text-red-800 ring-1 ring-inset ring-red-200",
+    icone: "text-red-500",
   },
   ZONA_MORTA: {
     titulo: "Zona morta dos R$79: o custo fixo está comendo sua margem.",
-    tom: "bg-amber-50 text-amber-800 border-amber-200",
+    tom: "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200",
+    icone: "text-amber-500",
   },
   ZONA_MORTA_SEM_SAIDA: {
     titulo: "Zona morta sem saída: subir o preço não ajuda, o frete anula a economia.",
-    tom: "bg-amber-50 text-amber-800 border-amber-200",
+    tom: "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200",
+    icone: "text-amber-500",
   },
-  ABAIXO_DA_META: { titulo: "Abaixo da meta de margem.", tom: "bg-amber-50 text-amber-800 border-amber-200" },
+  ABAIXO_DA_META: {
+    titulo: "Abaixo da meta de margem.",
+    tom: "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200",
+    icone: "text-amber-500",
+  },
 };
 
 export default function Calculadora({ produto, comissaoClassicoPct, comissaoPremiumPct, config }: Props) {
@@ -133,18 +141,21 @@ export default function Calculadora({ produto, comissaoClassicoPct, comissaoPrem
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4">
+    <div className="mx-auto max-w-4xl space-y-6 p-4 py-8">
       <div>
-        <h1 className="text-lg font-semibold text-gray-900">{produto.nome}</h1>
-        <p className="text-sm text-gray-500">
-          Custo: {formatarReais(reaisParaCentavos(Number(produto.custo_compra)))} · Embalagem:{" "}
-          {formatarReais(reaisParaCentavos(Number(produto.custo_embalagem)))} · Peso: {produto.peso_gramas}g
+        <Link href="/produtos" className="text-sm font-medium text-slate-500 hover:text-slate-900">
+          ← Catálogo
+        </Link>
+        <h1 className="mt-1 text-xl font-semibold text-slate-900">{produto.nome}</h1>
+        <p className="mt-0.5 text-sm text-slate-500">
+          Custo {formatarReais(reaisParaCentavos(Number(produto.custo_compra)))} · Embalagem{" "}
+          {formatarReais(reaisParaCentavos(Number(produto.custo_embalagem)))} · Peso {produto.peso_gramas}g
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label htmlFor="preco" className="block text-sm font-medium text-gray-700">
+      <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/50 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label htmlFor="preco" className="block text-sm font-medium text-slate-700">
             Preço de venda (R$)
           </label>
           <input
@@ -153,11 +164,11 @@ export default function Calculadora({ produto, comissaoClassicoPct, comissaoPrem
             inputMode="decimal"
             value={precoReais}
             onChange={(e) => setPrecoReais(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-lg font-medium focus:border-gray-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-lg font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           />
         </div>
-        <div className="space-y-1">
-          <label htmlFor="margemAlvo" className="block text-sm font-medium text-gray-700">
+        <div className="space-y-1.5">
+          <label htmlFor="margemAlvo" className="block text-sm font-medium text-slate-700">
             Margem desejada (%) — calcular preço
           </label>
           <input
@@ -166,7 +177,7 @@ export default function Calculadora({ produto, comissaoClassicoPct, comissaoPrem
             inputMode="decimal"
             value={margemAlvoInput}
             onChange={(e) => setMargemAlvoInput(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
           />
         </div>
       </div>
@@ -190,7 +201,11 @@ export default function Calculadora({ produto, comissaoClassicoPct, comissaoPrem
         />
       </div>
 
-      {mensagemSalvar && <p className="text-sm text-gray-700">{mensagemSalvar}</p>}
+      {mensagemSalvar && (
+        <p className="rounded-lg bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-800 ring-1 ring-inset ring-emerald-200">
+          {mensagemSalvar}
+        </p>
+      )}
     </div>
   );
 }
@@ -213,13 +228,15 @@ function CartaoTipo({
   const msg = MENSAGENS_ESTADO[resultado.estadoMargem];
 
   return (
-    <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
+    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/50">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-gray-900">{titulo}</h2>
-        <span className="text-sm text-gray-500">{formatarPercentual(resultado.comissaoPct)} comissão</span>
+        <h2 className="font-semibold text-slate-900">{titulo}</h2>
+        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+          {formatarPercentual(resultado.comissaoPct)} comissão
+        </span>
       </div>
 
-      <dl className="space-y-1 text-sm">
+      <dl className="space-y-1.5 text-sm">
         <LinhaBreakdown label="Comissão" valor={-resultado.comissaoValor} />
         <LinhaBreakdown label="Custo fixo" valor={-resultado.custoFixoAplicado} />
         <LinhaBreakdown
@@ -229,60 +246,75 @@ function CartaoTipo({
         />
         <LinhaBreakdown label="Imposto" valor={-resultado.impostoValor} />
         <LinhaBreakdown label="Custo do produto" valor={-resultado.custoCompra - resultado.custoEmbalagem} />
-        <div className="flex justify-between border-t border-gray-200 pt-1 font-semibold">
-          <span>Lucro líquido</span>
-          <span className={resultado.lucroLiquido < 0 ? "text-red-600" : "text-green-700"}>
+        <div className="flex items-baseline justify-between border-t border-slate-100 pt-2">
+          <span className="font-semibold text-slate-900">Lucro líquido</span>
+          <span className={`text-base font-semibold ${resultado.lucroLiquido < 0 ? "text-red-600" : "text-emerald-600"}`}>
             {formatarReais(resultado.lucroLiquido)}
           </span>
         </div>
-        <div className="flex justify-between text-gray-500">
+        <div className="flex justify-between text-slate-500">
           <span>Margem líquida</span>
-          <span>{formatarPercentual(resultado.margemLiquida)}</span>
+          <span className="font-medium text-slate-700">{formatarPercentual(resultado.margemLiquida)}</span>
         </div>
       </dl>
 
       {msg && (
-        <div className={`rounded border p-2 text-xs ${msg.tom}`}>
-          <p>{msg.titulo}</p>
-          {resultado.diagnosticoZonaMorta && (
-            <p className="mt-1">
-              Em {formatarReais(resultado.diagnosticoZonaMorta.precoAlternativo)} a margem vai de{" "}
-              {formatarPercentual(resultado.diagnosticoZonaMorta.margemAtual)} para{" "}
-              {formatarPercentual(resultado.diagnosticoZonaMorta.margemAlternativa)}
-              {deveSugerirKit(resultado.estadoMargem) ? " — ou monte um kit de 2-3 unidades pra passar dos R$79." : "."}
-            </p>
-          )}
+        <div className={`flex gap-2 rounded-lg p-3 text-xs leading-relaxed ${msg.tom}`}>
+          <svg viewBox="0 0 20 20" fill="currentColor" className={`mt-0.5 h-4 w-4 shrink-0 ${msg.icone}`}>
+            <path
+              fillRule="evenodd"
+              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 6a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 6Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <div>
+            <p className="font-medium">{msg.titulo}</p>
+            {resultado.diagnosticoZonaMorta && (
+              <p className="mt-1">
+                Em {formatarReais(resultado.diagnosticoZonaMorta.precoAlternativo)} a margem vai de{" "}
+                {formatarPercentual(resultado.diagnosticoZonaMorta.margemAtual)} para{" "}
+                {formatarPercentual(resultado.diagnosticoZonaMorta.margemAlternativa)}
+                {deveSugerirKit(resultado.estadoMargem) ? " — ou monte um kit de 2-3 unidades pra passar dos R$79." : "."}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
-      {!sugestao.denominadorInvalido ? (
-        <button type="button" onClick={() => onAplicarSugestao(sugestao.precoVenda)} className="text-xs underline text-gray-600">
-          Usar preço sugerido: {formatarReais(sugestao.precoVenda)}
-        </button>
-      ) : (
-        <p className="text-xs text-red-600">Meta de margem impossível com essas taxas (soma ≥ 100%).</p>
-      )}
+      <div className="mt-auto space-y-3">
+        {!sugestao.denominadorInvalido ? (
+          <button
+            type="button"
+            onClick={() => onAplicarSugestao(sugestao.precoVenda)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100"
+          >
+            Usar preço sugerido: {formatarReais(sugestao.precoVenda)}
+          </button>
+        ) : (
+          <p className="text-xs text-red-600">Meta de margem impossível com essas taxas (soma ≥ 100%).</p>
+        )}
 
-      <button
-        type="button"
-        onClick={onSalvar}
-        disabled={salvando}
-        className="w-full rounded bg-gray-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
-      >
-        {salvando ? "Salvando..." : `Salvar precificação (${titulo})`}
-      </button>
+        <button
+          type="button"
+          onClick={onSalvar}
+          disabled={salvando}
+          className="w-full rounded-lg bg-indigo-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {salvando ? "Salvando..." : `Salvar precificação (${titulo})`}
+        </button>
+      </div>
     </div>
   );
 }
 
 function LinhaBreakdown({ label, valor, nota }: { label: string; valor: number; nota?: string }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between text-slate-600">
       <span>
         {label}
         {nota && <span className="text-amber-600"> ({nota})</span>}
       </span>
-      <span>{formatarReais(valor)}</span>
+      <span className="text-slate-900">{formatarReais(valor)}</span>
     </div>
   );
 }
