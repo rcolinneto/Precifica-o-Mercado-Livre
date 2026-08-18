@@ -1,14 +1,15 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/server";
 import { formatarReais, reaisParaCentavos } from "@/lib/money";
 import ToggleAtivoButton from "./ToggleAtivoButton";
 import ExcluirProdutoButton from "./ExcluirProdutoButton";
 
 export default async function ProdutosPage() {
-  const supabase = await createClient();
+  const { supabase, user } = await requireUser();
   const { data: produtos } = await supabase
     .from("produtos")
     .select("id, nome, sku, custo_compra, ativo")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   return (

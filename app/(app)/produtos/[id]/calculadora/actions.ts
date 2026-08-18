@@ -47,6 +47,11 @@ export async function salvarPrecificacao(input: SalvarPrecificacaoInput): Promis
     estado_margem: input.estadoMargem,
   });
 
-  if (error) return { erro: "Não foi possível salvar a precificação." };
+  if (error) {
+    // Só o usuário vê a mensagem genérica abaixo; o motivo real do Postgres
+    // fica no log do servidor pra dar pra diagnosticar.
+    console.error("salvarPrecificacao falhou:", error);
+    return { erro: "Não foi possível salvar a precificação." };
+  }
   return {};
 }

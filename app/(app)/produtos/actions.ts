@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/server";
 import type { Modalidade } from "@/lib/pricing";
 
 export interface EstadoProduto {
@@ -32,11 +32,7 @@ function lerCamposProduto(formData: FormData) {
 }
 
 export async function criarProduto(_estado: EstadoProduto | undefined, formData: FormData): Promise<EstadoProduto> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const { supabase, user } = await requireUser();
 
   const campos = lerCamposProduto(formData);
   if (!campos.nome) return { erro: "Informe o nome do produto." };
@@ -77,7 +73,7 @@ export async function atualizarProduto(
   _estado: EstadoProduto | undefined,
   formData: FormData,
 ): Promise<EstadoProduto> {
-  const supabase = await createClient();
+  const { supabase, user } = await requireUser();
 
   const campos = lerCamposProduto(formData);
   if (!campos.nome) return { erro: "Informe o nome do produto." };
@@ -100,7 +96,8 @@ export async function atualizarProduto(
       modalidade_padrao: campos.modalidadePadrao,
       aceito_no_full: campos.aceitoNoFull,
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("user_id", user.id);
 
   if (error) {
     if (error.code === "23505") return { erro: "Já existe um produto com esse SKU." };
@@ -111,15 +108,17 @@ export async function atualizarProduto(
   redirect(`/produtos/${id}/calculadora`);
 }
 
-export async function alternarAtivo(id: string, ativo: boolean) {
-  const supabase = await createClient();
-  await supabase.from("produtos").update({ ativo }).eq("id", id);
+export async function alternarAtivo(id: string, ativo: boolean): Promise<{ erro?: string }> {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase.from("produtos").update({ ativo }).eq("id", id).eq("user_id", user.id);
   revalidatePath("/produtos");
+  if (error) return { erro: "Não foi possível atualizar o status." };
+  return {};
 }
 
 export async function excluirProduto(id: string): Promise<{ erro?: string }> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("produtos").delete().eq("id", id);
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase.from("produtos").delete().eq("id", id).eq("user_id", user.id);
   if (error) return { erro: "Não foi possível excluir o produto." };
   revalidatePath("/produtos");
   return {};

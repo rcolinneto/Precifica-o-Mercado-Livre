@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -25,4 +26,20 @@ export async function createClient() {
       },
     },
   );
+}
+
+/**
+ * Server client + usuário autenticado, num só lugar. Redireciona pra
+ * /login se a sessão não existir (ex: expirou entre o proxy.ts e este
+ * render) em vez de deixar `user!.id` estourar TypeError e virar 500.
+ * Toda query em produtos/precificacoes/configuracoes/tabela_frete deve
+ * filtrar por `user.id` explicitamente, não confiar só na RLS.
+ */
+export async function requireUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  return { supabase, user };
 }

@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/server";
 import EditarProdutoForm from "./EditarProdutoForm";
 
 export default async function EditarProdutoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const { supabase, user } = await requireUser();
   const { data: produto } = await supabase
     .from("produtos")
     .select(
       "id, nome, sku, marca, custo_compra, custo_embalagem, peso_real_g, comprimento_cm, largura_cm, altura_cm, modalidade_padrao, aceito_no_full",
     )
     .eq("id", id)
+    .eq("user_id", user.id)
     .single();
 
   if (!produto) notFound();
