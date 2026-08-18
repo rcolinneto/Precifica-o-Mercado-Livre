@@ -1,16 +1,19 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { EstadoMargem, TipoAnuncio } from "@/lib/pricing";
+import type { EstadoMargem, Modalidade, OrigemCustoEnvio, Reputacao, TipoAnuncio } from "@/lib/pricing";
 
 interface SalvarPrecificacaoInput {
   produtoId: string;
   tipoAnuncio: TipoAnuncio;
   precoVenda: number; // reais
   comissaoPct: number;
-  custoFixoAplicado: number; // reais
-  limiteCustoFixo: number; // reais
-  frete: number; // reais
+  custoEnvio: number; // reais
+  pesoCobravelG: number;
+  modalidade: Modalidade;
+  reputacao: Reputacao;
+  origemCustoEnvio: OrigemCustoEnvio;
+  limiteFreteGratis: number; // reais
   impostoPct: number;
   margemAlvoPct: number;
   custoCompra: number; // reais
@@ -31,9 +34,12 @@ export async function salvarPrecificacao(input: SalvarPrecificacaoInput): Promis
     preco_venda: input.precoVenda,
     tipo_anuncio: input.tipoAnuncio,
     comissao_pct: input.comissaoPct,
-    custo_fixo_aplicado: input.custoFixoAplicado,
-    limite_custo_fixo: input.limiteCustoFixo,
-    frete: input.frete,
+    custo_envio: input.custoEnvio,
+    peso_cobravel_g: input.pesoCobravelG,
+    modalidade: input.modalidade,
+    reputacao: input.reputacao,
+    origem_custo_envio: input.origemCustoEnvio,
+    limite_frete_gratis: input.limiteFreteGratis,
     imposto_pct: input.impostoPct,
     margem_alvo_pct: input.margemAlvoPct,
     custo_compra: input.custoCompra,
