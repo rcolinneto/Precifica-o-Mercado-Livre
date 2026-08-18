@@ -1,4 +1,4 @@
-# Precificador Dipil
+# Precificador Mercado Livre
 
 Sistema interno de precificação de produtos para Mercado Livre. Guarda o catálogo, calcula o preço certo de cada item (comissão, custo fixo, frete, imposto, margem) e alerta quando um produto cai na "zona morta" dos R$79 — a faixa de preço onde o custo fixo por venda do Mercado Livre corrói a margem.
 

@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Precificador Dipil",
+  title: "Precificador Mercado Livre",
   description: "Precificação de produtos para Mercado Livre",
 };
 

@@ -14,7 +14,7 @@ export default function LoginPage() {
           <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-lg font-semibold text-white shadow-sm">
             P
           </div>
-          <h1 className="text-xl font-semibold text-slate-900">Precificador Dipil</h1>
+          <h1 className="text-xl font-semibold text-slate-900">Precificador Mercado Livre</h1>
           <p className="mt-1 text-sm text-slate-500">Entre com sua conta</p>
         </div>
 

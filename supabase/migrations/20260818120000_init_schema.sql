@@ -1,4 +1,4 @@
--- Precificador Dipil — schema inicial
+-- Precificador Mercado Livre — schema inicial
 -- Convenções:
 --   * Todo valor monetário é numeric(10,2) em reais (nunca float).
 --   * Todo percentual é numeric(6,4) como fração 0-1 (ex: 0.1200 = 12%).

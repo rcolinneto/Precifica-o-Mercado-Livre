@@ -10,7 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-sm font-semibold text-white">
               P
             </span>
-            <span className="font-semibold text-slate-900">Precificador Dipil</span>
+            <span className="font-semibold text-slate-900">Precificador Mercado Livre</span>
           </Link>
           <form action={sair}>
             <button
