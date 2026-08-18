@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatarReais, reaisParaCentavos } from "@/lib/money";
 import ToggleAtivoButton from "./ToggleAtivoButton";
+import ExcluirProdutoButton from "./ExcluirProdutoButton";
 
 export default async function ProdutosPage() {
   const supabase = await createClient();
@@ -71,6 +72,7 @@ export default async function ProdutosPage() {
                         Editar
                       </Link>
                       <ToggleAtivoButton id={p.id} ativo={p.ativo} />
+                      <ExcluirProdutoButton id={p.id} nome={p.nome} />
                     </td>
                   </tr>
                 ))}

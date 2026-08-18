@@ -116,3 +116,11 @@ export async function alternarAtivo(id: string, ativo: boolean) {
   await supabase.from("produtos").update({ ativo }).eq("id", id);
   revalidatePath("/produtos");
 }
+
+export async function excluirProduto(id: string): Promise<{ erro?: string }> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("produtos").delete().eq("id", id);
+  if (error) return { erro: "Não foi possível excluir o produto." };
+  revalidatePath("/produtos");
+  return {};
+}
