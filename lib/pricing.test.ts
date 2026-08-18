@@ -102,6 +102,23 @@ describe("calcularCustoEnvio", () => {
     expect(r.faltando).toBeTruthy();
   });
 
+  it("peso_real_g = 0 é tratado como 'não sei', não como peso conhecido zero (regressão)", () => {
+    // 0g não existe de verdade — se isso passasse como "conhecido", o
+    // produto seria precificado contra a faixa mais barata da tabela em vez
+    // de cair em INDETERMINADO, exatamente o bug que a migration evitou.
+    const r = calcularCustoEnvio({
+      pesoRealG: 0,
+      dimensoesCm: null,
+      precoVenda: 3000,
+      modalidade: "agencia",
+      reputacao: "sem_reputacao",
+      tabela: tabelaLeve,
+      divisorCubagem: 6000,
+    });
+    expect(r.confiavel).toBe(false);
+    expect(r.faltando).toBeTruthy();
+  });
+
   it("faixa inexistente na tabela -> confiavel: false com mensagem explicando o que faltou", () => {
     const r = calcularCustoEnvio({
       pesoRealG: 200,
@@ -183,6 +200,18 @@ describe("calcularCustoEnvio", () => {
     expect(r.usouCubagem).toBe(true);
     // 301 não é < 301 -> sai da única faixa de peso que existe na tabela de teste
     expect(r.confiavel).toBe(false);
+  });
+
+  it("duas linhas batem na mesma busca -> vence a de vigente_desde mais recente", () => {
+    const tabelaComHistorico: LinhaTabelaFrete[] = [
+      { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 0, pesoMaxG: 1000, precoMin: 0, precoMax: 10000, custo: 100, vigenteDesde: "2026-01-01" },
+      { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 0, pesoMaxG: 1000, precoMin: 0, precoMax: 10000, custo: 999, vigenteDesde: "2026-06-01" },
+    ];
+    const r = calcularCustoEnvio({
+      pesoRealG: 200, dimensoesCm: null, precoVenda: 3000,
+      modalidade: "agencia", reputacao: "sem_reputacao", tabela: tabelaComHistorico, divisorCubagem: 6000,
+    });
+    expect(r.valor).toBe(999); // a linha de junho, não a de janeiro
   });
 });
 
@@ -294,6 +323,61 @@ describe("calcularPrecoSugerido / precoParaMargemAlvo", () => {
       expect(r.margemLiquida).toBeCloseTo(configBase.margemAlvoPct, 2);
       const conferencia = calcularParaPreco(r.precoVenda, p);
       expect(conferencia.margemLiquida).toBeCloseTo(configBase.margemAlvoPct, 2);
+    }
+  });
+});
+
+describe("tabela de frete seed (migration) — sem buracos de peso, regressão", () => {
+  // Espelha supabase/migrations/20260818190000_consolida_seed_frete.sql. Se
+  // um buraco voltar a existir (na migration ou aqui), este teste some de
+  // acusar em vez de esperar um usuário bater nele em produção de novo.
+  const seedCompleto: LinhaTabelaFrete[] = [
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 0, pesoMaxG: 301, precoMin: 0, precoMax: 1900, custo: 565 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 0, pesoMaxG: 301, precoMin: 1900, precoMax: 4900, custo: 655 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 0, pesoMaxG: 301, precoMin: 4900, precoMax: 7900, custo: 775 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 0, pesoMaxG: 301, precoMin: 7900, precoMax: 99999999, custo: 1235 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 301, pesoMaxG: 1000, precoMin: 0, precoMax: 1900, custo: 595 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 301, pesoMaxG: 1000, precoMin: 1900, precoMax: 4900, custo: 675 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 301, pesoMaxG: 1000, precoMin: 4900, precoMax: 7900, custo: 795 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 301, pesoMaxG: 1000, precoMin: 7900, precoMax: 99999999, custo: 1340 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 1000, pesoMaxG: 2001, precoMin: 0, precoMax: 1900, custo: 625 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 1000, pesoMaxG: 2001, precoMin: 1900, precoMax: 4900, custo: 695 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 1000, pesoMaxG: 2001, precoMin: 4900, precoMax: 7900, custo: 815 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 1000, pesoMaxG: 2001, precoMin: 7900, precoMax: 99999999, custo: 1445 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 2001, pesoMaxG: 5000, precoMin: 0, precoMax: 1900, custo: 645 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 2001, pesoMaxG: 5000, precoMin: 1900, precoMax: 4900, custo: 775 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 2001, pesoMaxG: 5000, precoMin: 4900, precoMax: 7900, custo: 905 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 2001, pesoMaxG: 5000, precoMin: 7900, precoMax: 99999999, custo: 1995 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 5000, pesoMaxG: 6001, precoMin: 0, precoMax: 1900, custo: 665 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 5000, pesoMaxG: 6001, precoMin: 1900, precoMax: 4900, custo: 855 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 5000, pesoMaxG: 6001, precoMin: 4900, precoMax: 7900, custo: 995 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 5000, pesoMaxG: 6001, precoMin: 7900, precoMax: 99999999, custo: 2545 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 6001, pesoMaxG: 10000, precoMin: 0, precoMax: 1900, custo: 685 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 6001, pesoMaxG: 10000, precoMin: 1900, precoMax: 4900, custo: 905 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 6001, pesoMaxG: 10000, precoMin: 4900, precoMax: 7900, custo: 1045 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 6001, pesoMaxG: 10000, precoMin: 7900, precoMax: 99999999, custo: 3335 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 10000, pesoMaxG: 999999999, precoMin: 0, precoMax: 1900, custo: 705 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 10000, pesoMaxG: 999999999, precoMin: 1900, precoMax: 4900, custo: 955 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 10000, pesoMaxG: 999999999, precoMin: 4900, precoMax: 7900, custo: 1095 },
+    { modalidade: "agencia", reputacao: "sem_reputacao", pesoMinG: 10000, pesoMaxG: 999999999, precoMin: 7900, precoMax: 99999999, custo: 4125 },
+  ];
+
+  it("qualquer peso de 1g a 500kg encontra uma faixa (nenhum INDETERMINADO por buraco de peso)", () => {
+    const pesosParaTestar = [
+      1, 100, 300, 301, 500, 999, 1000, 1500, 2000, 2001, 3000, 4999, 5000, 5500, 6000, 6001, 8000, 9999, 10000,
+      50000, 500000,
+    ];
+    for (const peso of pesosParaTestar) {
+      const r = calcularCustoEnvio({
+        pesoRealG: peso,
+        dimensoesCm: null,
+        precoVenda: 3000, // R$30 — dentro da faixa 19-49 pra qualquer peso testado
+        modalidade: "agencia",
+        reputacao: "sem_reputacao",
+        tabela: seedCompleto,
+        divisorCubagem: 6000,
+      });
+      expect(r.confiavel, `peso ${peso}g deveria encontrar uma faixa na tabela`).toBe(true);
     }
   });
 });

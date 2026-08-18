@@ -16,3 +16,15 @@ export function formatarReais(centavos: number): string {
 export function formatarPercentual(fracao: number, casasDecimais = 1): string {
   return `${(fracao * 100).toFixed(casasDecimais)}%`;
 }
+
+/**
+ * Faz o inverso do que o usuário vê na tela: "1.234,56" (separador de
+ * milhar com ponto, decimal com vírgula) -> 1234.56. `.replace(",", ".")`
+ * sozinho quebra em qualquer preço >= R$1.000 (vira "1.234.56", parseFloat
+ * para no segundo ponto e devolve 1.234 — cem vezes menor que o real).
+ */
+export function parsePtBrNumero(valor: string): number {
+  const limpo = valor.trim().replace(/\./g, "").replace(",", ".");
+  const n = parseFloat(limpo);
+  return Number.isFinite(n) ? n : 0;
+}

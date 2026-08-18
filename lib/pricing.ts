@@ -45,6 +45,8 @@ export interface LinhaTabelaFrete {
   precoMin: number; // centavos
   precoMax: number; // centavos, exclusivo: precoMin <= preço < precoMax
   custo: number; // centavos
+  /** ISO 'YYYY-MM-DD'. Entre linhas que batem na mesma busca, a mais recente vence — opcional só pra não obrigar todo teste a preencher; dado real do banco sempre traz. */
+  vigenteDesde?: string;
 }
 
 export interface CustoEnvio {
@@ -137,13 +139,19 @@ function resolverPesoCobravel(
   dimensoesCm: DimensoesCm | null,
   divisorCubagem: number,
 ): { pesoCobravelG: number; usouCubagem: boolean; conhecido: boolean } {
-  if (pesoRealG === null && dimensoesCm === null) {
+  // 0g não existe de verdade (nenhum produto físico pesa zero) — trata como
+  // "não sei" igual a null, senão vira a mesma classe de bug que a migration
+  // inteira foi feita pra matar: peso=0 batendo na faixa mais barata da
+  // tabela e saindo como se fosse um dado confiável de verdade.
+  const pesoRealConhecido = pesoRealG !== null && pesoRealG > 0 ? pesoRealG : null;
+
+  if (pesoRealConhecido === null && dimensoesCm === null) {
     return { pesoCobravelG: 0, usouCubagem: false, conhecido: false };
   }
   const pesoCubadoG = dimensoesCm
     ? (dimensoesCm.comprimento * dimensoesCm.largura * dimensoesCm.altura * 1000) / divisorCubagem
     : 0;
-  const pesoRealResolvido = pesoRealG ?? 0;
+  const pesoRealResolvido = pesoRealConhecido ?? 0;
   const usouCubagem = pesoCubadoG > pesoRealResolvido;
   // Nunca subestima: arredonda pra cima, mesmo que isso empurre o produto
   // pra fora da faixa de peso mais barata (testado explicitamente).
@@ -158,7 +166,7 @@ function buscarLinhaTabela(
   pesoCobravelG: number,
   precoVenda: number,
 ): LinhaTabelaFrete | undefined {
-  return tabela.find(
+  const candidatas = tabela.filter(
     (l) =>
       l.modalidade === modalidade &&
       l.reputacao === reputacao &&
@@ -166,6 +174,12 @@ function buscarLinhaTabela(
       pesoCobravelG < l.pesoMaxG &&
       precoVenda >= l.precoMin &&
       precoVenda < l.precoMax,
+  );
+  if (candidatas.length <= 1) return candidatas[0];
+  // Mais de uma linha bate (ex: usuário corrigiu uma taxa inserindo uma
+  // nova linha sem apagar a antiga) — a de vigente_desde mais recente vence.
+  return candidatas.reduce((maisRecente, atual) =>
+    (atual.vigenteDesde ?? "") > (maisRecente.vigenteDesde ?? "") ? atual : maisRecente,
   );
 }
 
