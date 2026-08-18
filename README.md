@@ -19,6 +19,16 @@ npm run dev
 
 Abra [http://localhost:3000](http://localhost:3000).
 
+## Telas
+
+- `/cadastro`, `/login` — Supabase Auth (e-mail/senha). Confirmação de e-mail está desativada no projeto (uso interno, 2 usuários conhecidos) — cadastro já loga na hora.
+- `/produtos` — catálogo: listar, criar, editar, ativar/desativar.
+- `/produtos/[id]/calculadora` — o coração do sistema: preço recalculado em tempo real (Clássico vs Premium lado a lado), breakdown de comissão/custo fixo/frete/imposto/lucro, botão "calcular preço pra uma margem alvo", alerta de zona morta dos R$79, e salvar a simulação no histórico (`precificacoes`).
+
+Todas as rotas autenticadas ficam sob `app/(app)/`, protegidas por `proxy.ts` (convenção do Next 16 para middleware) — sem sessão, qualquer rota redireciona pra `/login`.
+
+Ainda não construído: seletor de categoria por produto no formulário (comissão cai no padrão de `configuracoes` por enquanto), tela de Configurações, Dashboard, Comparativo e Kits.
+
 ## Variáveis de ambiente
 
 Todas ficam em `.env.local` (nunca commitado — está no `.gitignore`). Copie `.env.local.example` como ponto de partida.
