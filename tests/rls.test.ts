@@ -179,4 +179,52 @@ describe.skipIf(!hasCredentials)("RLS — isolamento entre usuários (integraç�
       .insert({ kit_id: kitA!.id, produto_id: produtoA!.id, quantidade: 1 });
     expect(insertByBError).not.toBeNull();
   });
+
+  it("excluir um produto com precificação salva funciona e preserva o histórico (regressão)", async () => {
+    // Bug real encontrado em produção: precificacoes_produto_ou_kit exigia
+    // EXATAMENTE UM de produto_id/kit_id. produto_id tem "on delete set
+    // null" pra preservar histórico, mas isso deixava os dois nulos ao
+    // mesmo tempo numa precificação sem kit — violava a constraint e
+    // travava a exclusão do produto inteira. Corrigido pra "no máximo um".
+    const { data: produtoA } = await clientA
+      .from("produtos")
+      .insert({ nome: "Produto p/ excluir RLS", custo_compra: 10, user_id: userAId })
+      .select()
+      .single();
+
+    const { data: precificacaoA, error: precoError } = await clientA
+      .from("precificacoes")
+      .insert({
+        user_id: userAId,
+        produto_id: produtoA!.id,
+        preco_venda: 50,
+        tipo_anuncio: "classico",
+        comissao_pct: 0.12,
+        custo_envio: 6.5,
+        peso_cobravel_g: 200,
+        modalidade: "agencia",
+        reputacao: "sem_reputacao",
+        origem_custo_envio: "tabela",
+        limite_frete_gratis: 79,
+        imposto_pct: 0.04,
+        margem_alvo_pct: 0.15,
+        custo_compra: 10,
+        custo_embalagem: 0,
+        estado_margem: "OK",
+      })
+      .select()
+      .single();
+    expect(precoError).toBeNull();
+
+    const { error: deleteError } = await clientA.from("produtos").delete().eq("id", produtoA!.id);
+    expect(deleteError).toBeNull();
+
+    const { data: sobrevivente } = await clientA
+      .from("precificacoes")
+      .select("id, produto_id")
+      .eq("id", precificacaoA!.id)
+      .single();
+    expect(sobrevivente).toBeTruthy();
+    expect(sobrevivente!.produto_id).toBeNull();
+  });
 });
