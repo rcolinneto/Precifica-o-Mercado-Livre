@@ -16,7 +16,7 @@ import {
   type ResultadoPrecoSugerido,
   type TipoAnuncio,
 } from "@/lib/pricing";
-import { centavosParaReais, formatarPercentual, formatarReais, reaisParaCentavos } from "@/lib/money";
+import { centavosParaReais, formatarPercentual, formatarReais, parsePtBrNumero, reaisParaCentavos } from "@/lib/money";
 import { salvarPrecificacao } from "./actions";
 
 interface Produto {
@@ -48,6 +48,7 @@ interface LinhaTabelaFreteDb {
   preco_min: number;
   preco_max: number;
   custo: number;
+  vigente_desde: string;
 }
 
 interface Props {
@@ -91,12 +92,18 @@ function mapearTabela(tabela: LinhaTabelaFreteDb[]): LinhaTabelaFrete[] {
     precoMin: reaisParaCentavos(Number(l.preco_min)),
     precoMax: reaisParaCentavos(Number(l.preco_max)),
     custo: reaisParaCentavos(Number(l.custo)),
+    vigenteDesde: l.vigente_desde,
   }));
 }
 
 export default function Calculadora({ produto, comissaoClassicoPct, comissaoPremiumPct, config, tabelaFrete }: Props) {
   const [precoReais, setPrecoReais] = useState("79,90");
-  const [margemAlvoInput, setMargemAlvoInput] = useState(String(Math.round(Number(config.margem_alvo_pct) * 100)));
+  // toFixed antes de Number: 0.155*100 dá 15.499999999999998 em ponto
+  // flutuante puro. Math.round perdia a casa decimal de propósito (15.5% ->
+  // "16"), mudando silenciosamente a margem alvo antes do usuário editar.
+  const [margemAlvoInput, setMargemAlvoInput] = useState(
+    String(Number((Number(config.margem_alvo_pct) * 100).toFixed(2))),
+  );
   const [salvando, startSalvando] = useTransition();
   const [mensagemSalvar, setMensagemSalvar] = useState<string | null>(null);
 
@@ -134,8 +141,8 @@ export default function Calculadora({ produto, comissaoClassicoPct, comissaoPrem
     [produto, configPricing, tabela],
   );
 
-  const precoCentavos = reaisParaCentavos(parseFloat(precoReais.replace(",", ".")) || 0);
-  const margemDesejadaPct = (parseFloat(margemAlvoInput.replace(",", ".")) || 0) / 100;
+  const precoCentavos = reaisParaCentavos(parsePtBrNumero(precoReais));
+  const margemDesejadaPct = parsePtBrNumero(margemAlvoInput) / 100;
 
   const resultadoClassico: ResultadoPreco = useMemo(
     () => calcularParaPreco(precoCentavos, { ...baseParams, comissaoPct: comissaoClassicoPct }),
