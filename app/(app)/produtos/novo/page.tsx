@@ -50,7 +50,13 @@ export default function NovoProdutoPage() {
         </div>
 
         <div className="border-t border-slate-100 pt-4 space-y-3">
-          <CampoSelect label="Modalidade de envio padrão" name="modalidade_padrao" defaultValue="agencia" opcoes={OPCOES_MODALIDADE} />
+          <div>
+            <CampoSelect label="Modalidade de envio padrão" name="modalidade_padrao" defaultValue="agencia" opcoes={OPCOES_MODALIDADE} />
+            <p className="mt-1.5 text-xs text-slate-500">
+              Só Agência tem tabela de frete cadastrada por enquanto — as outras aparecem aqui assim que tiverem dado
+              real.
+            </p>
+          </div>
           <CampoCheckbox
             label="Aceito no Full"
             name="aceito_no_full"
